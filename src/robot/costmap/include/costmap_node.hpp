@@ -16,6 +16,7 @@ class CostmapNode : public rclcpp::Node {
     void lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan);
     void initializeCostmap(int size);
     void printOccupancyGrid();
+    void markObstacle(int x_grid, int y_grid);
 
   private:
     robot::CostmapCore costmap_;

@@ -28,10 +28,18 @@ void CostmapNode::publishMessage()
 
   string_pub_->publish(message);
   string_pub_->publish(message2);
-}
-void CostmapNode::lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan) {
-  RCLCPP_INFO(this->get_logger(), "Received LaserScan data:");
 
+
+}
+
+// this func is called whenever lidar sub recieves msg
+void CostmapNode::lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan) {
+  RCLCPP_INFO(this->get_logger(), "Received lidar data:");
+
+  if (!scan) {
+    RCLCPP_ERROR(this->get_logger(), "error: no lidar data");
+    return;
+  }
   
   if (occupancyGrid.empty()) {
         initializeCostmap(SIZE_OF_MAP); // 200 cells l * w
@@ -42,18 +50,22 @@ void CostmapNode::lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
     double range = scan->ranges[i];
 
     if (range < scan->range_max && range > scan->range_min) { // within grid
-      // int x_grid, y_grid;
+      std::pair<int, int> point = getGridIndicies({100,100}, range, angle); // set origin as center (100,100)
+      int x_grid = point.first;
+      int y_grid = point.second;
       // convertToGrid(range, range, x_grid, y_grid);
-      // markObstacle(x_grid, y_grid);
+      markObstacle(x_grid, y_grid);
     }
+ 
 
     // Log the angle
     // RCLCPP_INFO(this->get_logger(), "Angle: %.2f radians", angle);
   }
+  printOccupancyGrid();
 }
 
 void CostmapNode::initializeCostmap(int size){ // 0.1m per cell, 200 cells, 20m
-  occupancyGrid.resize(size, std::vector<int>(size, 0)); // set size of array
+    occupancyGrid.resize(size, std::vector<int>(size, 0)); // set array size
  
  // init all cells as 0 (empty)
   for (int i = 0; i < size; ++i) { 
@@ -78,11 +90,18 @@ std::pair<int, int> CostmapNode::getGridIndicies(std::pair<int, int> origin, dou
     const int yDiff = range * sin(angle) / RESOLUTION;
     const int x = xDiff + origin.first;
     const int y = yDiff + origin.second;
-    int protectedX = (x > 20) ? 20 : x;
-    int protectedY = (y > 20) ? 20 : x;
+    int protectedX = (x > SIZE_OF_MAP) ? SIZE_OF_MAP : x;
+    int protectedY = (y > SIZE_OF_MAP) ? SIZE_OF_MAP : y;
     protectedX = (protectedX < 0) ? 0 : protectedX;
     protectedY = (protectedY < 0) ? 0 : protectedY;
     return {protectedX, protectedY};
+}
+
+void CostmapNode::markObstacle(int x_grid, int y_grid) {
+  if (x_grid >= 0 && x_grid < SIZE_OF_MAP && 
+      y_grid >= 0 && y_grid < SIZE_OF_MAP) {
+    occupancyGrid[x_grid][y_grid] = 100;
+  }
 }
 int main(int argc, char **argv)
 {
