@@ -5,14 +5,18 @@
 #include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "costmap_core.hpp"
- 
+#include <vector>
+
 class CostmapNode : public rclcpp::Node {
   public:
     CostmapNode();
     
     // Place callback function here
     void publishMessage();
- 
+    void lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan);
+    void initializeCostmap(int size);
+    void printOccupancyGrid();
+
   private:
     robot::CostmapCore costmap_;
     // Place these constructs here
@@ -20,7 +24,11 @@ class CostmapNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr timer_;
 
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_sub_;
-    void lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan);
+    
+    static constexpr double RESOLUTION = 0.1;
+    static constexpr double SIZE_OF_MAP = 200;
+    std::pair<int, int> getGridIndicies(std::pair<int, int> origin, double range, double angle);
+    std::vector<std::vector<int>> occupancyGrid;
 
 };
  
