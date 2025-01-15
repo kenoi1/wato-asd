@@ -2,6 +2,7 @@
 #define COSTMAP_NODE_HPP_
 
 #include "costmap_core.hpp"
+// #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -16,6 +17,7 @@ public:
     void lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan);
     void initializeCostmap(int size);
     void printOccupancyGrid();
+    void publishCostmap();
 
 private:
     robot::CostmapCore costmap_;
@@ -28,9 +30,10 @@ private:
     static constexpr double RESOLUTION = 0.1;
     static constexpr double SIZE_OF_MAP = 200;
     static constexpr double MAX_COST = 100;
+    void inflateObstacles(int radius);
+    std::vector<int> flatternOccupancyGrid();
     std::pair<int, int> getGridIndicies(std::pair<int, int> origin, double range, double angle);
     std::vector<std::vector<int>> occupancyGrid;
-    void inflate(int x, int y, int radius);
 };
 
 #endif

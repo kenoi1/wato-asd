@@ -5,7 +5,7 @@
 #include "costmap_node.hpp"
 #include <math.h>
 
-void CostmapNode::inflate(int radius) {
+void CostmapNode::inflateObstacles(int radius) {
     for (int y = 0; y < SIZE_OF_MAP; ++y) {
         for (int x = 0; x < SIZE_OF_MAP; ++x) {
             for (int i = -radius; i <= radius; ++i) {
@@ -34,6 +34,31 @@ CostmapNode::CostmapNode() : Node("costmap"), costmap_(robot::CostmapCore(this->
     timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&CostmapNode::publishMessage, this));
 }
 
+std::vector<int> CostmapNode::flatternOccupancyGrid() {
+    std::vector<int> flatterned;
+    for (int i = 0; i < SIZE_OF_MAP; ++i) {
+        for (int j = 0; j < SIZE_OF_MAP; ++j) {
+            flatterned.push_back(occupancyGrid[i][j]);
+        }
+    }
+    return flatterned;
+}
+
+// void CostmapNode::publishCostmap() {
+//     auto message = nav_msgs::msg::OccupancyGrid();
+//     message.header.frame_id = "costmap";
+//     message.info.resolution = 0.1;
+//     message.info.width = SIZE_OF_MAP;
+//     message.info.height = SIZE_OF_MAP;
+//     message.info.origin.position.x = 0;
+//     message.info.origin.position.y = 0;
+//     message.data = flatternOccupancyGrid();
+
+//     RCLCPP_INFO(this->get_logger(), "Publishing costmap");
+
+//     costmap_pub_->publish(message);
+// }
+
 // Define the timer to publish a message every 500ms
 void CostmapNode::publishMessage() {
     auto message = std_msgs::msg::String();
@@ -41,6 +66,8 @@ void CostmapNode::publishMessage() {
 
     auto message2 = std_msgs::msg::String();
     message2.data = "AwawawaawawA";
+
+    // auto message3 = nav_msgs::msg::OccupancyGrid();
 
     RCLCPP_INFO(this->get_logger(), "Publishing: '%s' %s", message.data.c_str(), message2.data.c_str());
 
