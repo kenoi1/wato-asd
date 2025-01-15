@@ -5,27 +5,11 @@
 #include "costmap_node.hpp"
 #include <math.h>
 
-void CostmapNode::inflateObstacles(int radius) {
-    for (int y = 0; y < SIZE_OF_MAP; ++y) {
-        for (int x = 0; x < SIZE_OF_MAP; ++x) {
-            for (int i = -radius; i <= radius; ++i) {
-                for (int j = -radius; j <= radius; ++j) {
-                    if (x + i >= 0 && x + i < SIZE_OF_MAP && y + j >= 0 && y + j < SIZE_OF_MAP) {
-                        const double distance = sqrt(i * i + j * j);
-                        const int cost = MAX_COST * (1 - distance / radius);
-                        if (distance <= radius && occupancyGrid[x + i][y + j] < cost) {
-                            occupancyGrid[x + i][y + j] = cost;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 CostmapNode::CostmapNode() : Node("costmap"), costmap_(robot::CostmapCore(this->get_logger())) {
     // Initialize the constructs and their parameters
     string_pub_ = this->create_publisher<std_msgs::msg::String>("/test_topic", 10);
+    costmap_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/costmap", 10);
 
     lidar_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "/lidar", 10,
@@ -34,8 +18,8 @@ CostmapNode::CostmapNode() : Node("costmap"), costmap_(robot::CostmapCore(this->
     timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&CostmapNode::publishMessage, this));
 }
 
-std::vector<int> CostmapNode::flatternOccupancyGrid() {
-    std::vector<int> flatterned;
+std::vector<int8_t> CostmapNode::flatternOccupancyGrid() {
+    std::vector<int8_t> flatterned;
     for (int i = 0; i < SIZE_OF_MAP; ++i) {
         for (int j = 0; j < SIZE_OF_MAP; ++j) {
             flatterned.push_back(occupancyGrid[i][j]);
@@ -44,20 +28,21 @@ std::vector<int> CostmapNode::flatternOccupancyGrid() {
     return flatterned;
 }
 
-// void CostmapNode::publishCostmap() {
-//     auto message = nav_msgs::msg::OccupancyGrid();
-//     message.header.frame_id = "costmap";
-//     message.info.resolution = 0.1;
-//     message.info.width = SIZE_OF_MAP;
-//     message.info.height = SIZE_OF_MAP;
-//     message.info.origin.position.x = 0;
-//     message.info.origin.position.y = 0;
-//     message.data = flatternOccupancyGrid();
+void CostmapNode::publishCostmap() {
+    auto message = nav_msgs::msg::OccupancyGrid();
+    message.header.frame_id = "costmap";
+    message.info.resolution = 0.1;
+    message.info.width = SIZE_OF_MAP;
+    message.info.height = SIZE_OF_MAP;
+    message.info.origin.position.x = 0;
+    message.info.origin.position.y = 0;
+    message.data = flatternOccupancyGrid();
 
-//     RCLCPP_INFO(this->get_logger(), "Publishing costmap");
+    RCLCPP_INFO(this->get_logger(), "Publishing costmap");
 
-//     costmap_pub_->publish(message);
-// }
+    costmap_pub_->publish(message);
+    printOccupancyGrid();
+}
 
 // Define the timer to publish a message every 500ms
 void CostmapNode::publishMessage() {
@@ -86,9 +71,9 @@ void CostmapNode::lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
     return;
   }
   
-  if (occupancyGrid.empty()) {
+  
         initializeCostmap(SIZE_OF_MAP); // 200 cells l * w
-    }
+    
 
     for (size_t i = 0; i < scan->ranges.size(); ++i) {
         double angle = scan->angle_min + i * scan->angle_increment;
@@ -106,7 +91,12 @@ void CostmapNode::lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
     // Log the angle
     // RCLCPP_INFO(this->get_logger(), "Angle: %.2f radians", angle);
   }
-  printOccupancyGrid();
+  // Step 3: Inflate obstacles
+  inflateObstacles(INFLATION_RADIUS);
+ 
+  // Step 4: Publish costmap
+  publishCostmap();
+  // printOccupancyGrid();
 }
 
 void CostmapNode::initializeCostmap(int size){ // 0.1m per cell, 200 cells, 20m
@@ -148,6 +138,26 @@ void CostmapNode::markObstacle(int x_grid, int y_grid) {
     occupancyGrid[x_grid][y_grid] = 100;
   }
 }
+
+void CostmapNode::inflateObstacles(int radius) {
+    for (int y = 0; y < SIZE_OF_MAP; ++y) {
+        for (int x = 0; x < SIZE_OF_MAP; ++x) {
+            for (int i = -radius; i <= radius; ++i) {
+                for (int j = -radius; j <= radius; ++j) {
+                    if (x + i >= 0 && x + i < SIZE_OF_MAP && y + j >= 0 && y + j < SIZE_OF_MAP) {
+                        const double distance = sqrt(i * i + j * j);
+                        const double cost = MAX_COST * (1 - distance / radius);
+                        if (distance <= radius && occupancyGrid[x + i][y + j] < cost &&
+                            occupancyGrid[x][y] == 100) {
+                            occupancyGrid[x + i][y + j] = cost;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);

@@ -30,6 +30,7 @@ target_include_directories(costmap_lib
 # Add ROS2 dependencies required by package
 ament_target_dependencies(costmap_lib 
   rclcpp
+  nav_msgs
   sensor_msgs
   std_msgs # YOU ARE ONLY ADDING THIS TO THE FILE
 )
