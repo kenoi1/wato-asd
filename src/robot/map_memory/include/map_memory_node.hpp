@@ -25,7 +25,6 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
 
     // Global map and robot position
-    vector<vector<int>> globalMapVec;
     nav_msgs::msg::OccupancyGrid global_map_;
     double last_x, last_y;
     const double distance_threshold;
