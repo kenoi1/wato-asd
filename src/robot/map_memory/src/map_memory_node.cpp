@@ -1,26 +1,26 @@
 #include "map_memory_node.hpp"
 
-MapMemoryNode::MapMemoryNode() : Node("map_memory"), map_memory_(robot::MapMemoryCore(this->get_logger()))
+MapMemoryNode::MapMemoryNode() : Node("map_memory"), map_memory_(robot::MapMemoryCore(this->get_logger())), last_x(0.0), last_y(0.0), distance_threshold(5.0)
 {
   // init sub/pub
   costmap_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-      "/costmap", 10, std::bind(&MappingNode::costmapCallback, this, std::placeholders::_1));
+      "/costmap", 10, std::bind(&MapMemoryNode::costmapCallback, this, std::placeholders::_1));
   odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-      "/odom/filtered", 10, std::bind(&MappingNode::odomCallback, this, std::placeholders::_1));
+      "/odom/filtered", 10, std::bind(&MapMemoryNode::odomCallback, this, std::placeholders::_1));
 
   map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", 10);
 
   // Initialize timer
   timer_ = this->create_wall_timer(
-      std::chrono::seconds(1), std::bind(&MappingNode::updateMap, this));
+      std::chrono::seconds(1), std::bind(&MapMemoryNode::updateMap, this));
 }
 
-void MappingNode::costmapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
+void MapMemoryNode::costmapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     latest_costmap_ = *msg;
     costmap_updated_ = true;
 }
 
-void MappingNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
+void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
     double x = msg->pose.pose.position.x;
     double y = msg->pose.pose.position.y;
 
@@ -33,7 +33,7 @@ void MappingNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
     }
 }
 
-void MappingNode::updateMap() {
+void MapMemoryNode::updateMap() {
     if (should_update_map_ && costmap_updated_) {
         integrateCostmap();
         map_pub_->publish(global_map_);
@@ -41,7 +41,7 @@ void MappingNode::updateMap() {
     }
 }
 
-void MappingNode::integrateCostmap() {
+void MapMemoryNode::integrateCostmap() {
     // Implementation of costmap integration
 }
 int main(int argc, char **argv)
