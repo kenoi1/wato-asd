@@ -3,19 +3,19 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "nav_msgs/msg/occupancy_grid.hpp"
 #include "map_memory_core.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 
 class MapMemoryNode : public rclcpp::Node {
-  public:
+public:
     MapMemoryNode();
     void costmapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
     void updateMap();
     void integrateCostmap();
 
-  private:
+private:
     robot::MapMemoryCore map_memory_;
 
     // Subscribers and Publisher
@@ -25,6 +25,7 @@ class MapMemoryNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr timer_;
 
     // Global map and robot position
+    vector<vector<int>> globalMapVec;
     nav_msgs::msg::OccupancyGrid global_map_;
     double last_x, last_y;
     const double distance_threshold;
@@ -35,4 +36,4 @@ class MapMemoryNode : public rclcpp::Node {
     nav_msgs::msg::OccupancyGrid latest_costmap_;
 };
 
-#endif 
+#endif

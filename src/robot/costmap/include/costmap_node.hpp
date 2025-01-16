@@ -2,8 +2,8 @@
 #define COSTMAP_NODE_HPP_
 
 #include "costmap_core.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -31,7 +31,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_sub_;
 
     static constexpr double RESOLUTION = 0.1;
-    static constexpr double SIZE_OF_MAP = 200;
+    static constexpr double SIZE_OF_MAP = 400;
     static constexpr double MAX_COST = 100;
     static constexpr double INFLATION_RADIUS = 2;
     void inflateObstacles(int radius);
