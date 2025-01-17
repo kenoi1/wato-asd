@@ -68,11 +68,14 @@ void MapMemoryNode::integrateCostmap() {
     for (int local_x = 0; local_x < SIZE_OF_MAP; ++local_x) {
         for (int local_y = 0; local_y < SIZE_OF_MAP; ++local_y) {
             int8_t index = local_x * SIZE_OF_MAP + local_y;
-            int8_t shiftedX = cos_yaw * local_x - sin_yaw * local_y + x_pos;
-            int8_t shiftedY = sin_yaw * local_x + cos_yaw * local_y + y_pos;
+            float shiftedX = cos_yaw * (local_x - 200) - sin_yaw * (local_y - 200) + x_pos + 200;
+            float shiftedY = sin_yaw * (local_x - 200) + cos_yaw * (local_y - 200) + y_pos + 200;
             int8_t shiftedIndex = shiftedX * SIZE_OF_MAP + shiftedY;
             if (shiftedX >= 0 && shiftedX < SIZE_OF_MAP && shiftedY >= 0 && shiftedY < SIZE_OF_MAP &&
-                shiftedIndex < global_map_data.size()) {
+                shiftedIndex < global_map_data.size() && !costmap_data.empty() 
+                && costmap_data[index] > 0 && costmap_data[index] < 100) {
+                
+
                 global_map_data[shiftedIndex] = costmap_data[index];
             }
         }
