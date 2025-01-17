@@ -3,7 +3,7 @@
 ControlNode::ControlNode(): Node("control"), control_(robot::ControlCore(this->get_logger())) {
     // Initialize parameters
     lookahead_distance_ = 1.0;  // Lookahead distance
-    goal_tolerance_ = 0.1;     // Distance to consider the goal reached
+    goal_tolerance_ = 3;     // Distance to consider the goal reached
     linear_speed_ = 0.5;       // Constant forward speed
 
     // Subscribers and Publishers
