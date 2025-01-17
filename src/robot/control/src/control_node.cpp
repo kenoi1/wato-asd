@@ -24,9 +24,18 @@ std::optional<geometry_msgs::msg::PoseStamped> ControlNode::findLookaheadPoint()
       if (!current_path_ || current_path_->poses.empty() || !robot_odom_) {
         return std::nullopt;  // No valid path or odometry data
     }
+    
 
     // Extract the robot's current position
     const auto &robot_position = robot_odom_->pose.pose.position;
+    const geometry_msgs::msg::PoseStamped &goal = current_path_->poses.back();
+    double distance_to_goal = computeDistance(robot_position, goal.pose.position);
+
+    if (distance_to_goal <= goal_tolerance_) {
+        // If the goal is within the tolerance, stop the robot by returning the robot's current position
+        return std::nullopt;
+    }
+    
 
     // Iterate through the path to find the lookahead point
     for (const auto &pose : current_path_->poses) {
