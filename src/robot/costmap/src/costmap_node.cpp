@@ -42,10 +42,10 @@ void CostmapNode::publishCostmap()
     message.info.origin.position.y = 0;
     message.data = flatternOccupancyGrid();
 
-    RCLCPP_INFO(this->get_logger(), "Publishing costmap");
+    RCLCPP_INFO(this->get_logger(), "\x1B[92mHELLO THIS IS A TEST\102[0m\t\t");
 
     costmap_pub_->publish(message);
-    printOccupancyGrid();
+    // printOccupancyGrid();
 }
 
 // Define the timer to publish a message every 500ms

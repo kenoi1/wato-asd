@@ -9,6 +9,13 @@
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include "planner_core.hpp"
 
+#include <vector>
+#include <queue>
+#include <cmath>
+#include <unordered_map>
+#include "a_star_struct.hpp"
+
+
 enum class State {
   WAITING_FOR_GOAL,
   WAITING_FOR_ROBOT_TO_REACH_GOAL};
@@ -38,8 +45,19 @@ class PlannerNode : public rclcpp::Node {
     geometry_msgs::msg::PointStamped goal_;
     geometry_msgs::msg::Pose robot_pose_;
  
-
     bool goal_received_ = false;
+
+    CellIndex generateMap(const geometry_msgs::msg::Point& point);  // world to grid
+geometry_msgs::msg::Point generateWorld(const CellIndex& cell); // grid to world
+    double calculateDist(const CellIndex& start, const CellIndex& goal);
+    std::vector<CellIndex> getNeighbors(const CellIndex& current_node);
+    bool isValidCell(const CellIndex& cell);
+    std::vector<geometry_msgs::msg::PoseStamped> reconstructPath(const AStarNode& goal_node);
+    
+    std::priority_queue<AStarNode, std::vector<AStarNode>, CompareF> open_set_;
+    // top of queue is best node
+    std::unordered_map<CellIndex, bool, CellIndexHash> closed_set_;
+    std::unordered_map<CellIndex, AStarNode, CellIndexHash> node_map_; 
 };
 
 #endif 
