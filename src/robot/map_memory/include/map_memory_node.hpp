@@ -26,6 +26,7 @@ private:
 
     static constexpr double RESOLUTION = 0.1;
     static constexpr double SIZE_OF_MAP = 400;
+    static constexpr double SIZE_OF_LOCAL_MAP = 400;
 
     // Global map and robot position
     nav_msgs::msg::OccupancyGrid global_map_;

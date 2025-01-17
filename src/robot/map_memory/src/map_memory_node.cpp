@@ -16,6 +16,9 @@ MapMemoryNode::MapMemoryNode() : Node("map_memory"), map_memory_(robot::MapMemor
         "/odom/filtered", 10, std::bind(&MapMemoryNode::odomCallback, this, std::placeholders::_1));
 
     map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", 10);
+    global_map_.data = {};
+    global_map_.data.resize(SIZE_OF_MAP * SIZE_OF_MAP, 0);
+    map_pub_->publish(global_map_);
 
     // Initialize timer
     timer_ = this->create_wall_timer(
@@ -57,7 +60,7 @@ void MapMemoryNode::updateMap() {
 void MapMemoryNode::integrateCostmap() {
     // Implementation of costmap integration
     std::vector<int8_t> costmap_data = latest_costmap_.data;
-    std::vector<int8_t> global_map_data = global_map_.data;
+    std::vector<int8_t> &global_map_data = global_map_.data;
     double cos_yaw = std::cos(last_yaw);
     double sin_yaw = std::sin(last_yaw);
     double x_pos = last_x / RESOLUTION + 200;
