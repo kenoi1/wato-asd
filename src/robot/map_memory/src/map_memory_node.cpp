@@ -66,6 +66,14 @@ void MapMemoryNode::updateMap()
     if (should_update_map_ && costmap_updated_)
     {
         integrateCostmap();
+        global_map_.header.stamp = latest_costmap_.header.stamp;
+        global_map_.header.frame_id = "sim_world";
+        global_map_.info.resolution = RESOLUTION;
+        global_map_.info.width = SIZE_OF_MAP;
+        global_map_.info.height = SIZE_OF_MAP;
+        global_map_.info.origin.position.x = -1 * SIZE_OF_MAP / 2 * RESOLUTION;
+        global_map_.info.origin.position.y = -1 * SIZE_OF_MAP / 2 * RESOLUTION;
+
         map_pub_->publish(global_map_);
         should_update_map_ = false;
     }
