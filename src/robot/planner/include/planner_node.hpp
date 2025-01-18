@@ -57,9 +57,7 @@ private:
   bool isValidCell(const CellIndex &cell);
   std::vector<geometry_msgs::msg::PoseStamped> reconstructPath(const AStarNode &goal_node);
 
-  std::priority_queue<AStarNode, std::vector<AStarNode>, CompareF> open_set_;
   // top of queue is best node
-  std::unordered_map<CellIndex, bool, CellIndexHash> closed_set_;
   std::unordered_map<CellIndex, AStarNode, CellIndexHash> node_map_;
 };
 

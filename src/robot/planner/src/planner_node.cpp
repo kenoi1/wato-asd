@@ -73,11 +73,10 @@ void PlannerNode::planPath()
     return;
   }
 
-  // wipe previous data
-  while (!open_set_.empty())
-    open_set_.pop();
+  std::priority_queue<AStarNode, std::vector<AStarNode>, CompareF> open_set; // nodes to process
+  std::unordered_map<CellIndex, bool, CellIndexHash> closed_set; // visited map
+
   node_map_.clear();
-  closed_set_.clear();
 
   // A* Implementation (pseudo-code)
   /*
@@ -90,8 +89,7 @@ void PlannerNode::planPath()
   CellIndex start = generateMap(robot_pose_.position);
   CellIndex goal = generateMap(goal_.point);
 
-
-  RCLCPP_INFO(this->get_logger(), "Planning path from (%d, %d) to (%d, %d)", 
+  RCLCPP_INFO(this->get_logger(), "Planning path from (%d, %d) to (%d, %d)",
               start.x, start.y, goal.x, goal.y);
   RCLCPP_INFO(this->get_logger(), "Robot position: (%f, %f), Goal position: (%f, %f)",
               robot_pose_.position.x, robot_pose_.position.y,
@@ -109,17 +107,23 @@ void PlannerNode::planPath()
       h_score,
       start);
 
-  open_set_.push(starting_node); // at start, its the only one eval.
+  // at start, its the only one eval.
+  open_set.push(starting_node);
   node_map_[start] = starting_node;
 
-  while (!open_set_.empty())
+  while (!open_set.empty()) 
   {
-    AStarNode current_node = open_set_.top(); // add node to visiting
-    closed_set_[current_node.index] = true;   // set as visited
-    open_set_.pop();                          // remove
+    AStarNode current_node = open_set.top(); // add node to visiting
+    open_set.pop();                          // remove
+    
+    closed_set[current_node.index] = true;   // set as visited
+    
+    // RCLCPP_INFO(this->get_logger(), "my loop worked");
 
+    // TODO
     if (current_node.index == goal)
     { // yay!
+      RCLCPP_INFO(this->get_logger(), "THIS IS THE END");
       nav_msgs::msg::Path path;
       path.header.stamp = this->get_clock()->now();
       path.header.frame_id = FRAME_ID;
@@ -130,39 +134,45 @@ void PlannerNode::planPath()
 
     for (const auto &neighbor_index : getNeighbors(current_node.index))
     {
-      if (closed_set_[neighbor_index])
-        continue; // checked
+      if (closed_set.find(neighbor_index) != closed_set.end()) {
+        // Already visited
+        continue;
+      }
+
       double tentative_g;
       if (abs(current_node.index.x - neighbor_index.x) == 1 &&
           abs(current_node.index.y - neighbor_index.y) == 1)
       {
-        tentative_g = current_node.g_score + std::sqrt(2.0); // diagonal
+        // Cell is diagonal to the existing cell
+        tentative_g = current_node.g_score + std::sqrt(2.0);
       }
       else
       {
         tentative_g = current_node.g_score + 1.0; // orthogonal
       }
-      // check potentially better route
-      AStarNode &neighbor = node_map_[neighbor_index];
 
-      if (tentative_g < neighbor.g_score)
+      // check potentially better route
+      if (node_map_.find(neighbor_index) == node_map_.end() || 
+          tentative_g < node_map_[neighbor_index].g_score)
       {
         // update neighbor if found shorter path
-        neighbor = AStarNode(
+        node_map_[neighbor_index] = AStarNode(
             neighbor_index,                                    // index
             tentative_g + calculateDist(neighbor_index, goal), // f_score (g + h)
             tentative_g,                                       // g_score
             calculateDist(neighbor_index, goal),               // h_score
             current_node.index);
+
+        open_set.push(node_map_[neighbor_index]);
       }
-      open_set_.push(neighbor);
     }
   }
-  RCLCPP_WARN(this->get_logger(), "No path found!");
-  //
 
-  // Compute path using A* on current_map_
-  // Fill path.poses with the resulting waypoints.
+  RCLCPP_WARN(this->get_logger(), "No path found!");
+//
+
+// Compute path using A* on current_map_
+// Fill path.poses with the resulting waypoints.
 }
 double PlannerNode::calculateDist(const CellIndex &start, const CellIndex &goal)
 {
@@ -183,7 +193,7 @@ std::vector<CellIndex> PlannerNode::getNeighbors(const CellIndex &current_node)
       if (dx == 0 && dy == 0)
         continue; // skip, the node
 
-      CellIndex neighbor(current_node.x + dx * 10, current_node.y + dy * 10);
+      CellIndex neighbor(current_node.x + dx, current_node.y + dy);
       if (isValidCell(neighbor))
       { // also check within bounds
         neighbors_of_node.push_back(neighbor);
@@ -226,7 +236,6 @@ std::vector<geometry_msgs::msg::PoseStamped> PlannerNode::reconstructPath(const 
   {
     geometry_msgs::msg::PoseStamped pose;
     pose.header.frame_id = FRAME_ID; // fix frame
-
     pose.header.stamp = this->get_clock()->now();
 
     // Convert grid coordinates back to world coordinates
