@@ -15,6 +15,7 @@ public:
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
     void updateMap();
     void integrateCostmap();
+    void publishMap();
 
 private:
     robot::MapMemoryCore map_memory_;
@@ -36,6 +37,7 @@ private:
     // Flags
     bool costmap_updated_ = false;
     bool should_update_map_ = false;
+    bool map_just_init_ = false;
     nav_msgs::msg::OccupancyGrid latest_costmap_;
 };
 

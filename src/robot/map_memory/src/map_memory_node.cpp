@@ -18,7 +18,7 @@ MapMemoryNode::MapMemoryNode()
       map_memory_(robot::MapMemoryCore(this->get_logger())),
       last_x(0.0),
       last_y(0.0),
-      distance_threshold(1.5)
+      distance_threshold(5.0)
 {
     // init sub/pub
     costmap_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
@@ -31,14 +31,12 @@ MapMemoryNode::MapMemoryNode()
     // init
     global_map_.data = {};
     global_map_.data.resize(SIZE_OF_MAP * SIZE_OF_MAP, 0);
-    integrateCostmap();
-    should_update_map_ = true;
-    updateMap();
+    map_just_init_ = true;
     
 
     // Initialize timer
     timer_ = this->create_wall_timer(
-        std::chrono::seconds(1), std::bind(&MapMemoryNode::updateMap, this));
+        std::chrono::seconds(1), std::bind(&MapMemoryNode::publishMap, this));
 }
 
 void MapMemoryNode::costmapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
@@ -59,13 +57,21 @@ void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 
     // update map after 5m dist.
     double distance = std::sqrt(std::pow(x - last_x, 2) + std::pow(y - last_y, 2));
-    if (distance >= distance_threshold)
+    if (distance >= distance_threshold || map_just_init_)
     {
         last_x = x;
         last_y = y;
         last_yaw = yaw;
+        map_just_init_ = false;
         should_update_map_ = true;
+        updateMap();
     }
+}
+
+void MapMemoryNode::publishMap() {
+    global_map_.header.stamp = this->now();
+    global_map_.header.frame_id = "sim_world";
+    map_pub_->publish(global_map_);
 }
 
 void MapMemoryNode::updateMap()
@@ -73,15 +79,12 @@ void MapMemoryNode::updateMap()
     if (should_update_map_ && costmap_updated_)
     {
         integrateCostmap();
-        global_map_.header.stamp = latest_costmap_.header.stamp;
-        global_map_.header.frame_id = "sim_world";
         global_map_.info.resolution = RESOLUTION;
         global_map_.info.width = SIZE_OF_MAP;
         global_map_.info.height = SIZE_OF_MAP;
         global_map_.info.origin.position.x = -1 * SIZE_OF_MAP / 2 * RESOLUTION;
         global_map_.info.origin.position.y = -1 * SIZE_OF_MAP / 2 * RESOLUTION;
 
-        map_pub_->publish(global_map_);
         should_update_map_ = false;
     }
 }
