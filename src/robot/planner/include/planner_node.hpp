@@ -48,6 +48,7 @@ private:
   geometry_msgs::msg::Pose robot_pose_;
 
   bool goal_received_ = false;
+  const std::string FRAME_ID = "sim_world";
 
   CellIndex generateMap(const geometry_msgs::msg::Point &point);  // world to grid
   geometry_msgs::msg::Point generateWorld(const CellIndex &cell); // grid to world
