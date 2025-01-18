@@ -1,12 +1,16 @@
 #include "map_memory_node.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2/LinearMath/Matrix3x3.h"
 #include <cmath>
 
 double quaternionToYaw(double x, double y, double z, double w)
 {
     // Compute yaw (rotation around Z-axis)
-    double siny_cosp = 2.0 * (w * z + x * y);
-    double cosy_cosp = 1.0 - 2.0 * (y * y + z * z);
-    return std::atan2(siny_cosp, cosy_cosp);
+    tf2::Quaternion q(x, y, z, w);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    return yaw;
 }
 
 MapMemoryNode::MapMemoryNode()
@@ -27,7 +31,10 @@ MapMemoryNode::MapMemoryNode()
     // init
     global_map_.data = {};
     global_map_.data.resize(SIZE_OF_MAP * SIZE_OF_MAP, 0);
-    map_pub_->publish(global_map_);
+    integrateCostmap();
+    should_update_map_ = true;
+    updateMap();
+    
 
     // Initialize timer
     timer_ = this->create_wall_timer(
