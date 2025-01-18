@@ -7,7 +7,8 @@
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 
-class MapMemoryNode : public rclcpp::Node {
+class MapMemoryNode : public rclcpp::Node
+{
 public:
     MapMemoryNode();
     void costmapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);

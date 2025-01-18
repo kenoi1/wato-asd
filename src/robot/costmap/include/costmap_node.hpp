@@ -9,7 +9,8 @@
 #include "std_msgs/msg/string.hpp"
 #include <vector>
 
-class CostmapNode : public rclcpp::Node {
+class CostmapNode : public rclcpp::Node
+{
 public:
     CostmapNode();
 
@@ -18,7 +19,7 @@ public:
     void lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan);
     void initializeCostmap(int size);
     void printOccupancyGrid();
-    void publishCostmap();
+    void publishCostmap(const std_msgs::msg::Header& header);
     void markObstacle(int x_grid, int y_grid);
 
 private:
