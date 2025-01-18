@@ -43,6 +43,18 @@ void MapMemoryNode::costmapCallback(const nav_msgs::msg::OccupancyGrid::SharedPt
 {
     latest_costmap_ = *msg;
     costmap_updated_ = true;
+    bool all_zeros = true;
+    for (int i = 0; i < msg->data.size(); ++i)
+    {
+        if (msg->data[i] != 0)
+        {
+            all_zeros = false;
+            break;
+        }
+    }
+    if (should_update_map_ && !all_zeros) {
+        updateMap();    
+    }
 }
 
 void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -57,14 +69,13 @@ void MapMemoryNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 
     // update map after 5m dist.
     double distance = std::sqrt(std::pow(x - last_x, 2) + std::pow(y - last_y, 2));
-    if (distance >= distance_threshold || map_just_init_)
+    if (distance >= distance_threshold || (map_just_init_))
     {
         last_x = x;
         last_y = y;
         last_yaw = yaw;
         map_just_init_ = false;
         should_update_map_ = true;
-        updateMap();
     }
 }
 
@@ -76,7 +87,7 @@ void MapMemoryNode::publishMap() {
 
 void MapMemoryNode::updateMap()
 {
-    if (should_update_map_ && costmap_updated_)
+    if (costmap_updated_)
     {
         integrateCostmap();
         global_map_.info.resolution = RESOLUTION;
