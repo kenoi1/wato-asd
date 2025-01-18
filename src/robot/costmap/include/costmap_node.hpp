@@ -31,10 +31,10 @@ private:
 
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_sub_;
 
-    static constexpr double RESOLUTION = 0.1;
-    static constexpr double SIZE_OF_MAP = 400;
+    static constexpr double RESOLUTION = 0.2;
+    static constexpr double SIZE_OF_MAP = 200;
     static constexpr double MAX_COST = 100;
-    static constexpr double INFLATION_RADIUS = 10;
+    static constexpr double INFLATION_RADIUS = 4;
     static constexpr int ORIGIN = SIZE_OF_MAP / 2;
     void inflateObstacles(int radius);
 
