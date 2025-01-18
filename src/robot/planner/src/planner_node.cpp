@@ -90,6 +90,16 @@ void PlannerNode::planPath()
   CellIndex start = generateMap(robot_pose_.position);
   CellIndex goal = generateMap(goal_.point);
 
+
+  RCLCPP_INFO(this->get_logger(), "Planning path from (%d, %d) to (%d, %d)", 
+              start.x, start.y, goal.x, goal.y);
+  RCLCPP_INFO(this->get_logger(), "Robot position: (%f, %f), Goal position: (%f, %f)",
+              robot_pose_.position.x, robot_pose_.position.y,
+              goal_.point.x, goal_.point.y);
+  RCLCPP_INFO(this->get_logger(), "Map info: width=%d, height=%d, resolution=%f",
+              current_map_.info.width, current_map_.info.height,
+              current_map_.info.resolution);
+
   // init start node
   double h_score = calculateDist(start, goal);
   AStarNode starting_node(
