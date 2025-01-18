@@ -18,7 +18,7 @@ MapMemoryNode::MapMemoryNode()
       map_memory_(robot::MapMemoryCore(this->get_logger())),
       last_x(0.0),
       last_y(0.0),
-      distance_threshold(5.0)
+      distance_threshold(1.5)
 {
     // init sub/pub
     costmap_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
@@ -93,8 +93,8 @@ void MapMemoryNode::integrateCostmap()
     std::vector<int8_t> &global_map_data = global_map_.data;
     double cos_yaw = std::cos(last_yaw);
     double sin_yaw = std::sin(last_yaw);
-    double x_pos = last_x / RESOLUTION;
-    double y_pos = last_y / RESOLUTION;
+    double x_pos = last_x;
+    double y_pos = last_y;
     int local_size = latest_costmap_.info.width;
     int local_origin_x = latest_costmap_.info.origin.position.x;
     int local_origin_y = latest_costmap_.info.origin.position.y;
@@ -107,23 +107,25 @@ void MapMemoryNode::integrateCostmap()
             if (occupancy_value < 0) { // unknown
                 continue;
             }
-            double local_x = local_origin_x + (i+0.5) * local_resolution;
-            double local_y = local_origin_y + (j+0.5) * local_resolution;
+            double local_x = local_origin_x + (j+0.5) * local_resolution;
+            double local_y = local_origin_y + (i+0.5) * local_resolution;
             double cos_yaw = std::cos(last_yaw);
             double sin_yaw = std::sin(last_yaw);
-            int global_x = last_x + cos_yaw * local_x - sin_yaw * local_y;
-            int global_y = last_y + sin_yaw * local_x + cos_yaw * local_y;
+            double global_x = last_x + (cos_yaw * local_x - sin_yaw * local_y);
+            double global_y = last_y + (sin_yaw * local_x + cos_yaw * local_y);
             double origin = SIZE_OF_MAP / -2 * RESOLUTION;
             int map_x = (global_x - origin) / RESOLUTION;
             int map_y = (global_y - origin) / RESOLUTION;
-            if (map_x >= 0 && map_x < SIZE_OF_MAP && map_y >= 0 && map_y < SIZE_OF_MAP
-                && occupancy_value > global_map_data[map_x * SIZE_OF_MAP + map_y])
+            if (map_x >= 0 && map_x < SIZE_OF_MAP && map_y >= 0 && map_y < SIZE_OF_MAP)
             {
-                global_map_data[map_x * SIZE_OF_MAP + map_y] = occupancy_value;
+                int map_index = map_y * SIZE_OF_MAP + map_x;
+                int8_t &global_occupancy = global_map_data[map_index];
+                int cg = (global_occupancy < 0) ? 0 : global_occupancy;
+                int merged = std::max(cg, occupancy_value);
+                global_occupancy = merged;
             }
         }
     }
-    global_map_.data = global_map_data;
 }
 int main(int argc, char **argv)
 {
