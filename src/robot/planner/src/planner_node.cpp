@@ -112,7 +112,7 @@ void PlannerNode::planPath()
     { // yay!
       nav_msgs::msg::Path path;
       path.header.stamp = this->get_clock()->now();
-      path.header.frame_id = current_map_.header.frame_id;
+      path.header.frame_id = FRAME_ID;
       path.poses = reconstructPath(current_node);
       path_pub_->publish(path);
       return;
@@ -215,7 +215,7 @@ std::vector<geometry_msgs::msg::PoseStamped> PlannerNode::reconstructPath(const 
   while (!(current.index == current.parent))
   {
     geometry_msgs::msg::PoseStamped pose;
-    pose.header.frame_id = current_map_.header.frame_id; // fix frame
+    pose.header.frame_id = FRAME_ID; // fix frame
 
     pose.header.stamp = this->get_clock()->now();
 
@@ -232,7 +232,7 @@ std::vector<geometry_msgs::msg::PoseStamped> PlannerNode::reconstructPath(const 
 
   // Add start position
   geometry_msgs::msg::PoseStamped start_pose;
-  start_pose.header.frame_id = current_map_.header.frame_id;
+  start_pose.header.frame_id = FRAME_ID;
   start_pose.header.stamp = this->get_clock()->now();
   start_pose.pose.position = generateWorld(current.index);
   path.insert(path.begin(), start_pose);

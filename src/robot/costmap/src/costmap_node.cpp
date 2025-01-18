@@ -55,7 +55,7 @@ void CostmapNode::publishMessage()
 
     // auto message3 = nav_msgs::msg::OccupancyGrid();
 
-    RCLCPP_INFO(this->get_logger(), "Publishing: '%s' %s", message.data.c_str(), message2.data.c_str());
+    // RCLCPP_INFO(this->get_logger(), "Publishing: '%s' %s", message.data.c_str(), message2.data.c_str());
 
     string_pub_->publish(message);
     string_pub_->publish(message2);
