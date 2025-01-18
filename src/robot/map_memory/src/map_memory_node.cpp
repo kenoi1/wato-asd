@@ -89,29 +89,37 @@ void MapMemoryNode::updateMap()
 void MapMemoryNode::integrateCostmap()
 {
     // Implementation of costmap integration
-    std::vector<int8_t> costmap_data = latest_costmap_.data;
+    const std::vector<int8_t> &costmap_data = latest_costmap_.data;
     std::vector<int8_t> &global_map_data = global_map_.data;
     double cos_yaw = std::cos(last_yaw);
     double sin_yaw = std::sin(last_yaw);
     double x_pos = last_x / RESOLUTION;
     double y_pos = last_y / RESOLUTION;
-    if (global_map_data.empty())
+    int local_size = latest_costmap_.info.width;
+    int local_origin_x = latest_costmap_.info.origin.position.x;
+    int local_origin_y = latest_costmap_.info.origin.position.y;
+    double local_resolution = latest_costmap_.info.resolution;
+    for (uint i = 0; i < local_size; ++i)
     {
-        global_map_data.resize(SIZE_OF_MAP * SIZE_OF_MAP, 0);
-    }
-    for (int local_x = 0; local_x < SIZE_OF_MAP; ++local_x)
-    {
-        for (int local_y = 0; local_y < SIZE_OF_MAP; ++local_y)
+        for (uint j = 0; j < local_size; ++j)
         {
-            int8_t index = local_x * SIZE_OF_MAP + local_y;
-            float shiftedX = cos_yaw * (local_x - 200) - sin_yaw * (local_y - 200) + x_pos + 200;
-            float shiftedY = sin_yaw * (local_x - 200) + cos_yaw * (local_y - 200) + y_pos + 200;
-            int8_t shiftedIndex = shiftedX * SIZE_OF_MAP + shiftedY;
-            if (shiftedX >= 0 && shiftedX < SIZE_OF_MAP && shiftedY >= 0 && shiftedY < SIZE_OF_MAP &&
-                shiftedIndex < global_map_data.size() && !costmap_data.empty() && costmap_data[index] > 0 && costmap_data[index] < 100)
+            int occupancy_value = costmap_data[i * local_size + j];
+            if (occupancy_value < 0) { // unknown
+                continue;
+            }
+            double local_x = local_origin_x + (i+0.5) * local_resolution;
+            double local_y = local_origin_y + (j+0.5) * local_resolution;
+            double cos_yaw = std::cos(last_yaw);
+            double sin_yaw = std::sin(last_yaw);
+            int global_x = last_x + cos_yaw * local_x - sin_yaw * local_y;
+            int global_y = last_y + sin_yaw * local_x + cos_yaw * local_y;
+            double origin = SIZE_OF_MAP / -2 * RESOLUTION;
+            int map_x = (global_x - origin) / RESOLUTION;
+            int map_y = (global_y - origin) / RESOLUTION;
+            if (map_x >= 0 && map_x < SIZE_OF_MAP && map_y >= 0 && map_y < SIZE_OF_MAP
+                && occupancy_value > global_map_data[map_x * SIZE_OF_MAP + map_y])
             {
-
-                global_map_data[shiftedIndex] = costmap_data[index];
+                global_map_data[map_x * SIZE_OF_MAP + map_y] = occupancy_value;
             }
         }
     }

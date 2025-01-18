@@ -25,8 +25,8 @@ private:
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr map_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
-    static constexpr double RESOLUTION = 0.3;
-    static constexpr double SIZE_OF_MAP = 100;
+    static constexpr double RESOLUTION = 0.2;
+    static constexpr double SIZE_OF_MAP = 150;
 
     // Global map and robot position
     nav_msgs::msg::OccupancyGrid global_map_;
