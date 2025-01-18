@@ -35,11 +35,11 @@ void CostmapNode::publishCostmap(const std_msgs::msg::Header& header)
 {
     auto message = nav_msgs::msg::OccupancyGrid();
     message.header = header;
-    message.info.resolution = 0.1;
+    message.info.resolution = RESOLUTION;
     message.info.width = SIZE_OF_MAP;
     message.info.height = SIZE_OF_MAP;
-    message.info.origin.position.x = -20;
-    message.info.origin.position.y = -20;
+    message.info.origin.position.x = -1 * ORIGIN * RESOLUTION;
+    message.info.origin.position.y = -1 * ORIGIN * RESOLUTION;
     message.data = flatternOccupancyGrid();
     costmap_pub_->publish(message);
 }
@@ -81,7 +81,7 @@ void CostmapNode::lidarCallback(const sensor_msgs::msg::LaserScan::SharedPtr sca
 
         if (range < scan->range_max && range > scan->range_min)
         {                                                                          // within grid
-            std::pair<int, int> point = getGridIndicies({200, 200}, range, angle); // set origin as center (100,100)
+            std::pair<int, int> point = getGridIndicies({ORIGIN, ORIGIN}, range, angle); // set origin as center (100,100)
             int x_grid = point.first;
             int y_grid = point.second;
             // convertToGrid(range, range, x_grid, y_grid);
@@ -132,11 +132,7 @@ std::pair<int, int> CostmapNode::getGridIndicies(std::pair<int, int> origin, dou
     const int yDiff = range * sin(angle) / RESOLUTION;
     const int x = xDiff + origin.first;
     const int y = yDiff + origin.second;
-    int protectedX = (x > SIZE_OF_MAP) ? SIZE_OF_MAP : x;
-    int protectedY = (y > SIZE_OF_MAP) ? SIZE_OF_MAP : y;
-    protectedX = (protectedX < 0) ? 0 : protectedX;
-    protectedY = (protectedY < 0) ? 0 : protectedY;
-    return {protectedX, protectedY};
+    return {x, y};
 }
 
 void CostmapNode::markObstacle(int x_grid, int y_grid)
