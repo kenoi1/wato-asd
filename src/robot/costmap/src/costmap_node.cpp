@@ -25,7 +25,7 @@ std::vector<int8_t> CostmapNode::flatternOccupancyGrid()
     {
         for (int j = 0; j < SIZE_OF_MAP; ++j)
         {
-            flatterned.push_back(occupancyGrid[i][j]);
+            flatterned.push_back(occupancyGrid[j][i]); // inverted x and y
         }
     }
     return flatterned;
@@ -38,8 +38,8 @@ void CostmapNode::publishCostmap(const std_msgs::msg::Header& header)
     message.info.resolution = 0.1;
     message.info.width = SIZE_OF_MAP;
     message.info.height = SIZE_OF_MAP;
-    message.info.origin.position.x = 0;
-    message.info.origin.position.y = 0;
+    message.info.origin.position.x = -20;
+    message.info.origin.position.y = -20;
     message.data = flatternOccupancyGrid();
     costmap_pub_->publish(message);
 }
