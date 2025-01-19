@@ -4,7 +4,7 @@ ControlNode::ControlNode() : Node("control"), control_(robot::ControlCore(this->
 {
     // Initialize parameters
     lookahead_distance_ = 1.0; // Lookahead distance
-    goal_tolerance_ = 3;       // Distance to consider the goal reached
+    goal_tolerance_ = 0.8;       // Distance to consider the goal reached
     linear_speed_ = 0.5;       // Constant forward speed
 
     // Subscribers and Publishers
@@ -73,7 +73,11 @@ void ControlNode::controlLoop()
     auto lookahead_point = findLookaheadPoint();
     if (!lookahead_point)
     {
-        return; // No valid lookahead point found
+        auto cmd_vel = geometry_msgs::msg::Twist();
+        cmd_vel.linear.x = 0.0;
+        cmd_vel.angular.z = 0.0;
+        cmd_vel_pub_->publish(geometry_msgs::msg::Twist()); // Stop the robot
+        return;
     }
 
     // Compute velocity command
