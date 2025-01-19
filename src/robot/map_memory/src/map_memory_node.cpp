@@ -18,7 +18,7 @@ MapMemoryNode::MapMemoryNode()
       map_memory_(robot::MapMemoryCore(this->get_logger())),
       last_x(0.0),
       last_y(0.0),
-      distance_threshold(5.0)
+      distance_threshold(3)
 {
     // init sub/pub
     costmap_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
