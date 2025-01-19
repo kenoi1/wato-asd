@@ -139,17 +139,20 @@ void PlannerNode::planPath()
         continue;
       }
 
-      double tentative_g;
+      double movement_cost;
       if (abs(current_node.index.x - neighbor_index.x) == 1 &&
           abs(current_node.index.y - neighbor_index.y) == 1)
       {
         // Cell is diagonal to the existing cell
-        tentative_g = current_node.g_score + std::sqrt(2.0);
+        movement_cost = std::sqrt(2.0);
       }
       else
       {
-        tentative_g = current_node.g_score + 1.0; // orthogonal
+        movement_cost = 1.0; // orthogonal
       }
+      // HOIEWAHFOIEJOIW
+      movement_cost = movement_cost + getCellCost(neighbor_index);
+      double tentative_g = current_node.g_score + movement_cost;
 
       // check potentially better route
       if (node_map_.find(neighbor_index) == node_map_.end() || 
@@ -212,14 +215,19 @@ bool PlannerNode::isValidCell(const CellIndex &cell)
     return false;
   }
   // index in 1d array
-  int cell_index = cell.y * current_map_.info.width + cell.x;
-  int cell_cost = static_cast<int>(current_map_.data.at(cell_index));
-  if (cell_cost >= OBSTACLE_THRESHOLD) {
+
+  if (getCellCost(cell) >= OBSTACLE_THRESHOLD) {
     return false;
   }
   return true;
 }
-double PlannerNode::getCellCost
+
+double PlannerNode::getCellCost(const CellIndex &cell) {
+   // index in 1d array
+  int cell_index = cell.y * current_map_.info.width + cell.x;
+  return static_cast<int>(current_map_.data.at(cell_index)); // return cost
+}
+
 CellIndex PlannerNode::generateMap(const geometry_msgs::msg::Point &point)
 {
   // Convert world coordinates (meters) to grid coordinates (cells)
