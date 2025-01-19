@@ -22,6 +22,20 @@ PlannerNode::PlannerNode() : Node("planner"), planner_(robot::PlannerCore(this->
 void PlannerNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
   current_map_ = *msg;
+  if (goal_received_ && !isValidCell(generateMap(goal_.point))) {
+    state_ = State::WAITING_FOR_GOAL;
+    goal_received_ = false;
+
+    // Create empty path message
+    nav_msgs::msg::Path empty_path;
+    empty_path.header.stamp = this->get_clock()->now();
+    empty_path.header.frame_id = FRAME_ID;
+    // Empty path.poses vector by default
+    empty_path.poses = {};
+    // Publish empty path
+    path_pub_->publish(empty_path);
+    return;
+  }
   if (state_ == State::WAITING_FOR_ROBOT_TO_REACH_GOAL)
   {
     planPath();
@@ -49,6 +63,16 @@ void PlannerNode::timerCallback()
     {
       RCLCPP_INFO(this->get_logger(), "Goal reached!");
       state_ = State::WAITING_FOR_GOAL;
+      goal_received_ = false;
+
+      // Create empty path message
+      nav_msgs::msg::Path empty_path;
+      empty_path.header.stamp = this->get_clock()->now();
+      empty_path.header.frame_id = FRAME_ID;
+      // Empty path.poses vector by default
+      empty_path.poses = {};
+      // Publish empty path
+      path_pub_->publish(empty_path);
     }
     else
     {
@@ -171,7 +195,8 @@ void PlannerNode::planPath()
     }
   }
 
-  RCLCPP_WARN(this->get_logger(), "No path found!");
+  RCLCPP_WARN(this->get_logger(), "No path found!"); /// cannot reach, reset path
+
 //
 
 // Compute path using A* on current_map_
