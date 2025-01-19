@@ -62,7 +62,7 @@ bool PlannerNode::goalReached()
 {
   double dx = goal_.point.x - robot_pose_.position.x;
   double dy = goal_.point.y - robot_pose_.position.y;
-  return std::sqrt(dx * dx + dy * dy) < 0.5; // Threshold for reaching the goal
+  return std::sqrt(dx * dx + dy * dy) < 1.5; // Threshold for reaching the goal
 }
 
 void PlannerNode::planPath()
@@ -202,20 +202,24 @@ std::vector<CellIndex> PlannerNode::getNeighbors(const CellIndex &current_node)
   }
   return neighbors_of_node;
 }
-// check bounds
+
 bool PlannerNode::isValidCell(const CellIndex &cell)
 {
+  // check bounds
   if (cell.x < 0 || cell.x >= current_map_.info.width ||
       cell.y < 0 || cell.y >= current_map_.info.height)
   {
     return false;
   }
-  else
-  {
-    return true;
+  // index in 1d array
+  int cell_index = cell.y * current_map_.info.width + cell.x;
+  int cell_cost = static_cast<int>(current_map_.data.at(cell_index));
+  if (cell_cost >= OBSTACLE_THRESHOLD) {
+    return false;
   }
+  return true;
 }
-
+double PlannerNode::getCellCost
 CellIndex PlannerNode::generateMap(const geometry_msgs::msg::Point &point)
 {
   // Convert world coordinates (meters) to grid coordinates (cells)

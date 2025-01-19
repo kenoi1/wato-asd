@@ -34,7 +34,7 @@ private:
     static constexpr double RESOLUTION = 0.2;
     static constexpr double SIZE_OF_MAP = 200;
     static constexpr double MAX_COST = 100;
-    static constexpr double INFLATION_RADIUS = 4;
+    static constexpr double INFLATION_RADIUS = 6;
     static constexpr int ORIGIN = SIZE_OF_MAP / 2;
     void inflateObstacles(int radius);
 

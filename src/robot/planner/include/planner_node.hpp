@@ -56,7 +56,7 @@ private:
   std::vector<CellIndex> getNeighbors(const CellIndex &current_node);
   bool isValidCell(const CellIndex &cell);
   std::vector<geometry_msgs::msg::PoseStamped> reconstructPath(const AStarNode &goal_node);
-
+  int OBSTACLE_THRESHOLD = 15;
   // top of queue is best node
   std::unordered_map<CellIndex, AStarNode, CellIndexHash> node_map_;
 };
